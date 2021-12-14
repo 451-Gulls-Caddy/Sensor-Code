@@ -38,22 +38,21 @@ bool a = false;
 // This function lets you control speed of the motors
 void speedControl() {
   // Turn on motors
-  int i = 140;
+  int i = 220;
   int l = 140;
   analogWrite(enA, i);
-  analogWrite(enB, 145);
-  analogWrite(enC, i);
-  analogWrite(enD, i);
-
+  analogWrite(enB, i);
+  analogWrite(enC, 120);
+  analogWrite(enD, 120);
 }
 void speedControl2() {
   // Turn on motors
-  int i = 140;
+  int i = 220;
   int l = 140;
   analogWrite(enA, i);
-  analogWrite(enB, 165);
-  analogWrite(enC, i);
-  analogWrite(enD, i);
+  analogWrite(enB, i);
+  analogWrite(enC, 220);
+  analogWrite(enD, 220);
 
 }
 void stopMovement(){
@@ -187,8 +186,9 @@ int getColor(){
     return 0;
   else if(frequencyRed < frequencyBlue && frequencyRed < frequencyGreen)
     return 1;
-  else
+  else if(frequencyGreen < frequencyBlue && frequencyGreen < frequencyRed)
     return 2;
+  
   
 }
 void loop() {
@@ -206,28 +206,41 @@ void loop() {
   // Calculating the distance
   distance = duration * 0.034 / 2; // Speed of sound wave divided by 2 (go and back)
  // Displays the distance on the Serial Monitor
-//  Serial.print("Distance: ");
-//  Serial.print(distance);
-//  Serial.println(" cm");
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
 
    
     
     int color = getColor();
     driveForward();
-    if(distance < 15){
+    if(distance < 35){
       stopMovement();
       delay(1000);
+      while(distance < 40)
+        if(getColor() == 1){
+          Serial.print("Red");
+          driveLeft();
+        }
+        else if(getColor() == 2){
+          Serial.print("Green");
+          driveRight();
+        }
+//      driveBackward();
+//      delay(400);
+//      stopMovement();
 //      if(color == 0){
 //        Serial.print("Blue");
 //        driveForward();
 //      }
-      if(color == 1){
-        Serial.print("Red");
-        while(distance < 15)
-           driveLeft();
-      }
-      else
-        Serial.print("Green");
+//      if(color == 1){
+//        Serial.print("Red");
+//        while(distance < 50)
+//           driveLeft();
+//      }
+   }
+   if(distance > 35){
+      delay(400);
    }
 //  driveForward();
 //  delay(1000);
