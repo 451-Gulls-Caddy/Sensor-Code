@@ -15,7 +15,9 @@ int motor4pin1 = 46;
 int motor4pin2 = 47;
 int enD = 7;
 
-
+bool horizontal = false;
+bool lastStep = false;
+bool straight = false;
 // Ultra Sound
 #define echoPin 9
 #define trigPin 10
@@ -38,21 +40,31 @@ bool a = false;
 // This function lets you control speed of the motors
 void speedControl() {
   // Turn on motors
-  int i = 220;
+  int i = 160;
   int l = 140;
   analogWrite(enA, i);
   analogWrite(enB, i);
-  analogWrite(enC, 120);
-  analogWrite(enD, 120);
+  analogWrite(enC, i);
+  analogWrite(enD, i); //170
 }
-void speedControl2() {
+void speedControl2(int x) {
   // Turn on motors
-  int i = 220;
+  int i = 200;
   int l = 140;
   analogWrite(enA, i);
   analogWrite(enB, i);
-  analogWrite(enC, 220);
-  analogWrite(enD, 220);
+  analogWrite(enC, i);
+  analogWrite(enD, 155); //170
+//  if(x == 1)
+//    analogWrite(enA, 160);  //190
+//  else if(x == 2)
+//    analogWrite(enA, 160);
+//  analogWrite(enB, 220);
+//  if(x == 1)
+//    analogWrite(enC, 200);
+//  else if(x == 2)
+//    analogWrite(enC, 175);
+//  analogWrite(enD, 220); // 255
 
 }
 void stopMovement(){
@@ -75,7 +87,7 @@ void driveLeft(){
   digitalWrite(motor3pin2, HIGH);
   digitalWrite(motor4pin2, LOW);
   digitalWrite(motor4pin1, HIGH);
-  speedControl2();
+  speedControl2(2);
 }
 
 void driveRight() {
@@ -87,7 +99,7 @@ void driveRight() {
   digitalWrite(motor3pin2, LOW);
   digitalWrite(motor4pin2, HIGH);
   digitalWrite(motor4pin1, LOW);
-  speedControl2();
+  speedControl2(1);
 }
 
 void driveBackward(){
@@ -104,14 +116,15 @@ void driveBackward(){
 
 
 void driveForward(){
-  digitalWrite(motor1pin1, HIGH);
-  digitalWrite(motor1pin2, LOW);
-  digitalWrite(motor2pin2, HIGH);
-  digitalWrite(motor2pin1, LOW);
+ 
   digitalWrite(motor3pin1, LOW);
   digitalWrite(motor3pin2, HIGH);
   digitalWrite(motor4pin2, HIGH);
   digitalWrite(motor4pin1, LOW);
+   digitalWrite(motor1pin1, HIGH);
+  digitalWrite(motor1pin2, LOW);
+  digitalWrite(motor2pin2, HIGH);
+  digitalWrite(motor2pin1, LOW);
   speedControl();
 }
 
@@ -149,7 +162,7 @@ void setup() {
   digitalWrite(S1,LOW);
 }
 
-int getColor(){
+int getColor(int x){
   // Setting red filtered photodiodes to be read
   digitalWrite(S2,LOW);
   digitalWrite(S3,LOW);
@@ -159,7 +172,7 @@ int getColor(){
   Serial.print("R= ");//printing name
   Serial.print(frequencyRed);//printing RED color frequency
   Serial.print("  ");
-  delay(100);
+//  delay(100);
   // Setting Green filtered photodiodes to be read
   digitalWrite(S2,HIGH);
   digitalWrite(S3,HIGH);
@@ -169,7 +182,7 @@ int getColor(){
   Serial.print("G= ");//printing name
   Serial.print(frequencyGreen);//printing RED color frequency
   Serial.print("  ");
-  delay(100);
+//  delay(100);
   // Setting Blue filtered photodiodes to be read
   digitalWrite(S2,LOW);
   digitalWrite(S3,HIGH);
@@ -180,19 +193,25 @@ int getColor(){
   Serial.print(frequencyBlue);//printing RED color frequency
   Serial.println("  ");
 
-
-  // 0 = blue  1 = red   2 = green
-  if(frequencyBlue < frequencyRed && frequencyBlue < frequencyGreen)
-    return 0;
-  else if(frequencyRed < frequencyBlue && frequencyRed < frequencyGreen)
-    return 1;
-  else if(frequencyGreen < frequencyBlue && frequencyGreen < frequencyRed)
-    return 2;
+  
+  // 1 = red   2 = green
+  if(x == 1){
+    if(frequencyRed < frequencyGreen)
+      return 1;
+    else if(frequencyGreen < frequencyRed)
+      return 2;
+  }
+  // 1 = Red   2 = Blue
+  if(x == 2){
+    if(frequencyRed < frequencyBlue)
+      return 1;
+    else if(frequencyBlue < frequencyRed)
+      return 2;
+  }
   
   
 }
-void loop() {
-
+void getDistance() {
   // Clears the trigPin condition
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
@@ -209,76 +228,43 @@ void loop() {
   Serial.print("Distance: ");
   Serial.print(distance);
   Serial.println(" cm");
+}
 
-   
-    
-    int color = getColor();
+void loop() {
     driveForward();
-    if(distance < 35){
-      stopMovement();
-      delay(1000);
-      while(distance < 40)
-        if(getColor() == 1){
-          Serial.print("Red");
-          driveLeft();
-        }
-        else if(getColor() == 2){
-          Serial.print("Green");
+    getDistance();
+    horizontal = false;
+    while(distance < 25){
+      getDistance();
+      if(straight == false){
+        stopMovement();
+        delay(750);
+      }
+      horizontal = true;
+      if(getColor(1) == 1){
+        Serial.print("Red");
+        straight = true;
+        driveRight();
+      }
+      else if(getColor(1) == 2){
+        Serial.print("Green");
+        lastStep = true;
+        straight = true;
+        driveLeft();
+      }
+      else if(lastStep == true){
+        int val = getColor(2);
+        if(val == 1)
           driveRight();
-        }
-//      driveBackward();
-//      delay(400);
-//      stopMovement();
-//      if(color == 0){
-//        Serial.print("Blue");
-//        driveForward();
-//      }
-//      if(color == 1){
-//        Serial.print("Red");
-//        while(distance < 50)
-//           driveLeft();
-//      }
-   }
-   if(distance > 35){
-      delay(400);
-   }
-//  driveForward();
-//  delay(1000);
-//  stopMovement();
-//  delay(1000);
-//
-//  driveBackward();
-//  delay(1000);
-//  stopMovement();
-//  delay(1000);
-//  
-//  driveLeft();
-//  delay(1000);
-//  stopMovement();
-//  delay(1000);
-//
-//  driveForward();
-//  delay(1000);
-//  stopMovement();
-//  delay(1000);
-//
-//  driveBackward();
-//  delay(1000);
-//  stopMovement();
-//  delay(1000);
-//
-//  driveRight();
-//  delay(1000);
-//  stopMovement();
-//  delay(1000);
-//  driveForward();
-//  delay(2500);
-//  stopMovement();
-//  delay(1000);
-//
-//  driveBackward();
-//  delay(2500);
-//  stopMovement();
-//  delay(1000);
-
+        else if(val == 2)
+          driveLeft();
+      }
+    }
+    getDistance();
+    if(horizontal == true && distance > 25){
+      delay(150);
+      stopMovement();
+      delay(100);
+      straight = false;
+    }
 }
